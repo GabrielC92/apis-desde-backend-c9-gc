@@ -1,24 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Películas ordenas por fecha</title>
-    <link rel='stylesheet' href='/css/style.css' />
-</head>
+<%- include('partials/head', {title: 'Películas ordenadas por fecha'}) %>
 <body>
-    <figure>
-        <img src="/img/logo-DH.png" alt="Logo Digital House">
-    </figure>
-    <h1>PELIÍCULAS ORDENADASR FECHA</h1>
-    <ul>
-        <% for( let i = 0; i < movies.length; i++ ) { %>
-        <li>
-            <a href="/movies/detail/<%=movies[i].id%>"><%= movies[i].title %> </a> <br>
-            <%= 'RELEASE DATE: ' + movies[i].release_date %> 
-        </li>
-        <% } %>
-        
-    </ul>
+    <%- include('partials/header') %>
+    <main>
+        <figure>
+            <img src="/img/logo-DH.png" alt="Logo Digital House">
+        </figure>
+        <%- include('partials/search') %>
+        <h1>PELÍCULAS ORDENADAS POR FECHA</h1><br>
+        <ul>
+            <% for( let i = 0; i < movies.length; i++ ) { %>
+            <li>
+                <a href="/movies/detail/<%=movies[i].id%>"><%= movies[i].title %></a> <br>
+                <%= 'RELEASE DATE: ' + movies[i].release_date %>
+            </li><br>
+            <% } %>
+        </ul>
+        <br>
+        <p><a  class="botonVolver" href="/movies">Listado de Películas</a></p>
+    </main>
+    <%- include('partials/scripts') %>
 </body>
 </html>

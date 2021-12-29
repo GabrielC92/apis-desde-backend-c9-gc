@@ -1,27 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>listado de Generos</title>
-    <link rel='stylesheet' href='/css/style.css' />
-
-</head>
-
+<%- include('partials/head', {title: 'Listado de Generos'}) %>
 <body>
-    <figure>
-        <img src="/img/logo-DH.png" alt="Logo Digital House">
-      </figure>
-    <h1>LISTADO DE GENEROS</h1>
-    <ul>
-        <% for( let i = 0; i < genres.length; i++ ) { %>
-        <li>
-            <a href="/genres/detail/<%= genres[i].id %>"><%= genres[i].name %></a>
-        </li>
-        <% } %>
-
-    </ul>
+    <%- include('partials/header') %>
+    <main>
+        <figure>
+            <img src="/img/logo-DH.png" alt="Logo Digital House">
+          </figure><br>
+        <h1>LISTADO DE GENEROS</h1><br>
+        <ul>
+            <% for( let i = 0; i < genres.length; i++ ) { %>
+            <li>
+                <a href="/genres/detail/<%= genres[i].id %>"><%= genres[i].name %></a>
+            </li><br>
+            <% } %>
+        </ul>
+        <br>
+        <p><a  class="botonVolver" href="/movies">Listado de Películas</a></p>
+    </main>
 </body>
 
 </html>
