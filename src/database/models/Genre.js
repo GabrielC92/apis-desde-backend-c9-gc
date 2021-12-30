@@ -28,12 +28,13 @@ module.exports = (sequelize, dataTypes) => {
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
-        deletedAt: false
+        deletedAt: false,
+        underscored: true
     }
     const Genre = sequelize.define(alias, cols, config);
 
     Genre.associate = function(models) {
-        Genre.hasMany(models.Movie, { // models.Movies -> Movie es el valor de alias en movie.js
+        Genre.hasMany(models.Movie, { // models.Movie -> Movie es el valor de alias en movie.js
             as: "movies", // El nombre del modelo pero en plural
             foreignKey: "genre_id"
         })

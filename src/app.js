@@ -31,8 +31,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(methodOverride('_method'));
 
 app.use('/', indexRouter);
-app.use(moviesRoutes);
-app.use(genresRoutes);
+app.use('/movies', moviesRoutes);
+app.use('/genres', genresRoutes);
 //Aquí creo la colección de mis recursos de movies (APIs)
 app.use('/api/movies',apiMoviesRouter);
 app.use('/api/actors',apiActorsRouter);

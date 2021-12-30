@@ -4,7 +4,7 @@ const sequelize = db.sequelize;
 const { Op } = require("sequelize");
 const moment = require('moment');
 const fetch = require('node-fetch');
-
+const {validationResult} = require('express-validator');
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
 const Movies = db.Movie;
@@ -20,15 +20,25 @@ const moviesController = {
             .then(movies => {
                 res.render('moviesList.ejs', {movies})
             })
+            .catch(error => console.log(error));
     },
     'detail': (req, res) => {
-        db.Movie.findByPk(req.params.id,
+        let promMovies = db.Movie.findByPk(req.params.id,
             {
-                include : ['genre']
+                include : ['genre','actors']
             })
-            .then(movie => {
-                res.render('moviesDetail.ejs', {movie});
-            });
+        let promGenres = db.Genre.findAll()
+        let promActors = db.Actor.findAll()
+        Promise.all([promMovies, promGenres, promActors])
+            .then(([movie, allGenres, allActors]) => {
+                //movie.release_date = moment(movie.release_date).format('L');
+                return res.render('moviesDetail.ejs', {
+                    movie,
+                    allGenres,
+                    allActors
+                });
+            })
+            .catch(error => console.log(error));
     },
     'new': (req, res) => {
         db.Movie.findAll({
@@ -39,13 +49,14 @@ const moviesController = {
         })
             .then(movies => {
                 res.render('newestMovies', {movies});
-            });
+            })
+            .catch(error => console.log(error));
     },
-    'recomended': (req, res) => {
+    'recommended': (req, res) => {
         db.Movie.findAll({
             include: ['genre'],
             where: {
-                rating: {[db.Sequelize.Op.gte] : 8}
+                rating: {[Op.gte] : 8}
             },
             order: [
                 ['rating', 'DESC']
@@ -53,7 +64,25 @@ const moviesController = {
         })
             .then(movies => {
                 res.render('recommendedMovies.ejs', {movies});
-            });
+            })
+            .catch(error => console.log(error));
+    },
+    search : (req,res) => {
+        Movies.findAll({
+            where: {
+                [Op.or]: [{
+                    title: {
+                        [Op.substring]: req.query.keywords
+                    }
+                }]
+            }
+        })
+            .then(movies => res.render('moviesResult',{
+                title: 'Resultado de la búsqueda',
+                movies,
+                busqueda: req.query.keywords.trim()
+            }))
+            .catch(error => console.log(error));
     },
     //Aqui debo modificar para crear la funcionalidad requerida
     'buscar': async (req, res) => {
@@ -69,8 +98,8 @@ const moviesController = {
     },
     //Aqui dispongo las rutas para trabajar con el CRUD
     add: function (req, res) {
-        let promGenres = Genres.findAll();
-        let promActors = Actors.findAll();
+        let promGenres = Genres.findAll({order: [['name']]});
+        let promActors = Actors.findAll({order: [['last_name']]});
         
         Promise
         .all([promGenres, promActors])
@@ -79,26 +108,43 @@ const moviesController = {
         .catch(error => res.send(error))
     },
     create: function (req,res) {
-        Movies
-        .create(
-            {
-                title: req.body.title,
-                rating: req.body.rating,
-                awards: req.body.awards,
-                release_date: req.body.release_date,
-                length: req.body.length,
-                genre_id: req.body.genre_id
-            }
-        )
-        .then(()=> {
-            return res.redirect('/movies')})            
-        .catch(error => res.send(error))
+        let errors = validationResult(req);
+        if (errors.isEmpty()) {
+            Movies
+            .create(
+                {
+                    title: req.body.title,
+                    rating: req.body.rating,
+                    awards: req.body.awards,
+                    release_date: req.body.release_date,
+                    length: req.body.length,
+                    genre_id: req.body.genre_id
+                }
+            )
+            .then(()=> {
+                return res.redirect('/movies')})            
+            .catch(error => res.send(error))
+        } else {
+            let promGenres = Genres.findAll({order: [['name']]});
+            let promActors = Actors.findAll({order: [['last_name']]});
+            
+            Promise
+            .all([promGenres, promActors])
+            .then(([allGenres, allActors]) => {
+                return res.render(path.resolve(__dirname, '..', 'views',  'moviesAdd'), {
+                    allGenres,
+                    allActors,
+                    errors: errors.mapped(),
+                    old: req.body
+                })})
+            .catch(error => res.send(error))
+        }
     },
     edit: function(req,res) {
         let movieId = req.params.id;
         let promMovies = Movies.findByPk(movieId,{include: ['genre','actors']});
-        let promGenres = Genres.findAll();
-        let promActors = Actors.findAll();
+        let promGenres = Genres.findAll({order: [['name']]});
+        let promActors = Actors.findAll({order: [['last_name']]});
         Promise
         .all([promMovies, promGenres, promActors])
         .then(([Movie, allGenres, allActors]) => {
@@ -108,22 +154,42 @@ const moviesController = {
     },
     update: function (req,res) {
         let movieId = req.params.id;
-        Movies
-        .update(
-            {
-                title: req.body.title,
-                rating: req.body.rating,
-                awards: req.body.awards,
-                release_date: req.body.release_date,
-                length: req.body.length,
-                genre_id: req.body.genre_id
-            },
-            {
-                where: {id: movieId}
-            })
-        .then(()=> {
-            return res.redirect('/movies')})            
-        .catch(error => res.send(error))
+        let errors = validationResult(req);
+        
+        if (errors.isEmpty()) {
+            Movies
+            .update(
+                {
+                    title: req.body.title,
+                    rating: req.body.rating,
+                    awards: req.body.awards,
+                    release_date: req.body.release_date,
+                    length: req.body.length,
+                    genre_id: req.body.genre_id
+                },
+                {
+                    where: {id: movieId}
+                })
+            .then(()=> {
+                return res.redirect('/movies')})            
+            .catch(error => res.send(error))
+        } else {
+            let movieId = req.params.id;
+            let promMovies = Movies.findByPk(movieId,{include: ['genre','actors']});
+            let promGenres = Genres.findAll({order: [['name']]});
+            let promActors = Actors.findAll({order: [['last_name']]});
+            Promise
+            .all([promMovies, promGenres, promActors])
+            .then(([Movie, allGenres, allActors]) => {
+                Movie.release_date = moment(Movie.release_date).format('L');
+                return res.render(path.resolve(__dirname, '..', 'views',  'moviesEdit'), {
+                    Movie,
+                    allGenres,
+                    allActors,
+                    errors: errors.mapped()
+                })})
+            .catch(error => res.send(error))
+        }
     },
     delete: function (req,res) {
         let movieId = req.params.id;

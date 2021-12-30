@@ -1,9 +1,4 @@
-const path = require('path');
 const db = require('../../database/models');
-const sequelize = db.sequelize;
-const { Op } = require("sequelize");
-const moment = require('moment');
-
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
 const Movies = db.Movie;
@@ -13,34 +8,38 @@ const Actors = db.Actor;
 //Dentro del actorsAPIController uso las dos forma de poder llamar a nuestros modelo
 //----------------------------------
 const genresAPIController = {
-    'list': (req, res) => {
-        db.Genre.findAll()
-        .then(genres => {
-            let respuesta = {
+    'list': async (req, res) => {
+        try{
+            let genres = await db.Genre.findAll()
+            let response = {
                 meta: {
-                    status : 200,
+                    status: 200,
                     total: genres.length,
-                    url: 'api/genres'
+                    url: '/api/genres'
                 },
-                data: genres
+                data: genres,
             }
-                res.json(respuesta);
-            })
+            return res.status(200).json(response)
+        } catch(error){
+            return res.status(error.status || 500).json(error)
+        }
     },
     
-    'detail': (req, res) => {
-        db.Genre.findByPk(req.params.id)
-            .then(genre => {
-                let respuesta = {
-                    meta: {
-                        status: 200,
-                        total: genre.length,
-                        url: '/api/genre/:id'
-                    },
-                    data: genre
-                }
-                res.json(respuesta);
-            });
+    'detail': async (req, res) => {
+        try{
+            let genre = await db.Genre.findByPk(req.params.id)
+            let response = {
+                meta: {
+                    status: 200,
+                    total: genre.length,
+                    url: '/api/genres/:id'
+                },
+                data: genre
+            }
+            return res.status(200).json(response)
+        } catch(error) {
+            return res.status(error.status || 500).json(error)
+        }
     },
     'genreMovies': (req, res) => {
         db.Genre.findByPk(req.params.id,{
@@ -56,7 +55,8 @@ const genresAPIController = {
                     data: genre
                 }
                 res.json(respuesta);
-            });
+            })
+            .catch(error => res.status(error.status || 500).json(error))
     }
 }
 

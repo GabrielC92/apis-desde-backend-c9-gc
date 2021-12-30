@@ -1,9 +1,4 @@
-const path = require('path');
 const db = require('../../database/models');
-const sequelize = db.sequelize;
-const { Op } = require("sequelize");
-const moment = require('moment');
-
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
 const Movies = db.Movie;
@@ -13,34 +8,42 @@ const Actors = db.Actor;
 //Dentro del actorsAPIController uso las dos forma de poder llamar a nuestros modelo
 //----------------------------------
 const actorsAPIController = {
-    'list': (req, res) => {
-        db.Actor.findAll()
-        .then(actors => {
-            let respuesta = {
-                meta: {
-                    status : 200,
-                    total: actors.length,
-                    url: 'api/actors'
-                },
-                data: actors
-            }
-                res.json(respuesta);
+    'list': async (req, res) => {
+        try{
+            let actors = await db.Actor.findAll({
+                include : ['movie']
             })
+            let response = {
+                meta: {
+                    status: 200,
+                    total: actors.length,
+                    url: '/api/actors'
+                },
+                data: actors,
+            }
+            return res.status(200).json(response)
+        } catch(error){
+            return res.status(error.status || 500).json(error)
+        }
     },
-    
-    'detail': (req, res) => {
-        db.Actor.findByPk(req.params.id)
-            .then(actor => {
-                let respuesta = {
-                    meta: {
-                        status: 200,
-                        total: actor.length,
-                        url: '/api/actor/:id'
-                    },
-                    data: actor
-                }
-                res.json(respuesta);
-            });
+    'detail': async (req, res) => {
+        try{
+            let actor = await db.Actor.findByPk(req.params.id,{
+                include : ['movie']
+            })
+            let response = {
+                meta: {
+                    status: 200,
+                    total: actor.length,
+                    url: '/api/actors/:id'
+                },
+                data: actor
+            }
+            return res.status(200).json(response)
+            
+        } catch(error) {
+            return res.status(error.status || 500).json(error)
+        }
     },
     'actorMovies': (req, res) => {
         db.Actor.findByPk(req.params.id,{
@@ -51,12 +54,13 @@ const actorsAPIController = {
                     meta: {
                         status: 200,
                         total: actor.length,
-                        url: '/api/actor/:id'
+                        url: '/api/actors/:id/movies'
                     },
                     data: actor
                 }
                 res.json(respuesta);
-            });
+            })
+            .catch(error => res.send(error))
     },
     create: (req,res) => {
         Actors
@@ -73,18 +77,18 @@ const actorsAPIController = {
             if(confirm){
                 respuesta ={
                     meta: {
-                        status: 200,
+                        status: 201,
                         total: confirm.length,
-                        url: 'api/actors/create'
+                        url: '/api/actors/create'
                     },
                     data:confirm
                 }
             }else{
                 respuesta ={
                     meta: {
-                        status: 200,
+                        status: 204,
                         total: confirm.length,
-                        url: 'api/actors/create'
+                        url: '/api/actors/create'
                     },
                     data:confirm
                 }
@@ -105,6 +109,9 @@ const actorsAPIController = {
             {
                 where: {id: actorId}
         })
+        let actorUpdate = Actors.findByPk(actorId,{
+            include : ['movie']
+        })
         .then(confirm => {
             let respuesta;
             if(confirm){
@@ -112,7 +119,7 @@ const actorsAPIController = {
                     meta: {
                         status: 200,
                         total: confirm.length,
-                        url: 'api/actors/update/:id'
+                        url: '/api/actors/update/:id'
                     },
                     data:confirm
                 }
@@ -121,7 +128,7 @@ const actorsAPIController = {
                     meta: {
                         status: 204,
                         total: confirm.length,
-                        url: 'api/actors/update/:id'
+                        url: '/api/actors/update/:id'
                     },
                     data:confirm
                 }
@@ -132,6 +139,9 @@ const actorsAPIController = {
     },
     destroy: (req,res) => {
         let actorId = req.params.id;
+        let actorDelete = Actors.findByPk(actorId,{
+            include : ['movie']
+        })
         Actors
         .destroy({where: {id: actorId}, force: true}) // force: true es para asegurar que se ejecute la acción
         .then(confirm => {
@@ -141,7 +151,7 @@ const actorsAPIController = {
                     meta: {
                         status: 200,
                         total: confirm.length,
-                        url: 'api/actors/delete/:id'
+                        url: '/api/actors/delete/:id'
                     },
                     data:confirm
                 }
@@ -150,7 +160,7 @@ const actorsAPIController = {
                     meta: {
                         status: 204,
                         total: confirm.length,
-                        url: 'api/actors/delete/:id'
+                        url: '/api/actors/delete/:id'
                     },
                     data:confirm
                 }
@@ -159,7 +169,6 @@ const actorsAPIController = {
         })    
         .catch(error => res.send(error))
     }
-    
 }
 
 module.exports = actorsAPIController;

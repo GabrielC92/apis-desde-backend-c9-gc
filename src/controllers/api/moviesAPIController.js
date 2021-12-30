@@ -1,180 +1,213 @@
-const path = require('path');
 const db = require('../../database/models');
-const sequelize = db.sequelize;
 const { Op } = require("sequelize");
-const moment = require('moment');
-
 
 //Aqui tienen otra forma de llamar a cada uno de los modelos
 const Movies = db.Movie;
 const Genres = db.Genre;
 const Actors = db.Actor;
 
-
 const moviesAPIController = {
-    'list': (req, res) => {
-        db.Movie.findAll({
-            include: ['genre']
-        })
-        .then(movies => {
-            let respuesta = {
-                meta: {
-                    status : 200,
-                    total: movies.length,
-                    url: 'api/movies'
-                },
-                data: movies
-            }
-                res.json(respuesta);
-            })
-    },
-    
-    'detail': (req, res) => {
-        db.Movie.findByPk(req.params.id,
-            {
+    'list': async (req, res) => {
+        try {
+            let movies = await db.Movie.findAll({
                 include : ['genre']
             })
-            .then(movie => {
-                let respuesta = {
-                    meta: {
-                        status: 200,
-                        total: movie.length,
-                        url: '/api/movie/:id'
-                    },
-                    data: movie
-                }
-                res.json(respuesta);
-            });
-    },
-    'recomended': (req, res) => {
-        db.Movie.findAll({
-            include: ['genre'],
-            where: {
-                rating: {[db.Sequelize.Op.gte] : req.params.rating}
-            },
-            order: [
-                ['rating', 'DESC']
-            ]
-        })
-        .then(movies => {
-            let respuesta = {
+            let response = {
                 meta: {
-                    status : 200,
+                    status: 200,
                     total: movies.length,
-                    url: 'api/movies/recomended/:rating'
+                    url: '/api/movies'
                 },
                 data: movies
             }
-                res.json(respuesta);
-        })
-        .catch(error => console.log(error))
+            return res.status(200).json(response);
+        } catch (error) {
+            return res.status(error.status || 500).json(error);
+        }
     },
-    create: (req,res) => {
-        Movies
-        .create(
-            {
-                title: req.body.title,
-                rating: req.body.rating,
-                awards: req.body.awards,
-                release_date: req.body.release_date,
-                length: req.body.length,
-                genre_id: req.body.genre_id
+    'detail': async (req, res) => {
+        try {
+            let movie = await db.Movie.findByPk(req.params.id,
+                {
+                    include : ['genre']
+                })
+            let response = {
+                meta: {
+                    status: 200,
+                    total: movie.length,
+                    url: '/api/movies/:id'
+                },
+                data: movie
             }
-        )
-        .then(confirm => {
-            let respuesta;
-            if(confirm){
-                respuesta ={
+            return res.status(200).json(response);
+        } catch (error) {
+            return res.status(error.status || 500).json(error);
+        }
+    },
+    'recommended': async (req, res) => {
+        try {
+            let movies = await db.Movie.findAll({
+                include: ['genre'],
+                where: {
+                    rating: {[Op.gte] : req.params.rating}
+                },
+                order: [
+                    ['rating', 'DESC']
+                ]
+            })
+            let response = {
+                meta: {
+                    status : 200,
+                    total: movies.length,
+                    url: '/api/movies/recommended/:rating'
+                },
+                data: movies
+            }
+            return res.status(200).json(response)
+        } catch (error) {
+            return res.status(error.status || 500).json(error)
+        }
+    },
+    search : async (req,res) => {
+        try {
+            let movie = await Movies.findAll({
+                include: ['genre'],
+                where: {
+                    [Op.or]: [{
+                        title: {
+                            [Op.substring]: req.params.title
+                        }
+                    }]
+                }
+            })
+            let response = {
+                meta: {
+                    status: 200,
+                    total: movie.length,
+                    url: '/api/movies/search/:title'
+                },
+                data: movie
+            }
+            return res.status(200).json(response)
+        } catch (error) {
+            return res.status(error.status || 500).json(error)
+        }
+    },
+    create: async (req, res) => {
+        try {
+            let movieCreate = await Movies
+                .create(
+                    {
+                        title: req.body.title,
+                        rating: req.body.rating,
+                        awards: req.body.awards,
+                        release_date: req.body.release_date,
+                        length: req.body.length,
+                        genre_id: req.body.genre_id
+                    }
+                );
+            let response;
+            if (movieCreate) {
+                response = {
                     meta: {
-                        status: 200,
-                        total: confirm.length,
-                        url: 'api/movies/create'
+                        status: 201,
+                        total: movieCreate.length,
+                        url: '/api/movies/create'
                     },
-                    data:confirm
+                    data: movieCreate
                 }
             }else{
-                respuesta ={
+                response = {
                     meta: {
-                        status: 200,
-                        total: confirm.length,
-                        url: 'api/movies/create'
+                        status: 204,
+                        total: movieCreate.length,
+                        url: '/api/movies/create'
                     },
-                    data:confirm
+                    data: movieCreate
                 }
             }
-            res.json(respuesta);
-        })    
-        .catch(error => res.send(error))
+            return res.status(201).json(response);
+        } catch (error) {
+            return res.status(error.status || 500).json(error);
+        }
     },
-    update: (req,res) => {
-        let movieId = req.params.id;
-        Movies.update(
-            {
-                title: req.body.title,
-                rating: req.body.rating,
-                awards: req.body.awards,
-                release_date: req.body.release_date,
-                length: req.body.length,
-                genre_id: req.body.genre_id
-            },
-            {
-                where: {id: movieId}
-        })
-        .then(confirm => {
-            let respuesta;
+    update: async (req, res) => {
+        try {
+            let movieId = req.params.id;
+            let update = await Movies
+                .update(
+                    {
+                        title: req.body.title,
+                        rating: req.body.rating,
+                        awards: req.body.awards,
+                        release_date: req.body.release_date,
+                        length: req.body.length,
+                        genre_id: req.body.genre_id
+                    },
+                    {
+                        where: { id: movieId }
+                    });
+            let movieUpdate = await Movies.findByPk(movieId,{
+                include : ['genre']
+            })
+            let response;
+            if (update) {
+                response = {
+                    meta: {
+                        status: 200,
+                        total: update.length,
+                        url: '/api/movies/update/:id'
+                    },
+                    data: movieUpdate
+                }
+            }else{
+                response ={
+                    meta: {
+                        status: 204,
+                        total: update.length,
+                        url: '/api/movies/update/:id'
+                    },
+                    data: movieUpdate
+                }
+            }
+            return res.status(200).json(response);
+        } catch (error) {
+            return res.status(error.status || 500).json(error);
+        }
+    },
+    destroy: async (req, res) => {
+        try {
+            let movieId = req.params.id;
+            let movieDelete = await Movies.findByPk(movieId,{
+                include : ['genre']
+            })
+            let confirm = await Movies
+                .destroy({where: {id: movieId}, force: true}) // force: true es para asegurar que se ejecute la acción
+            let response;
             if(confirm){
-                respuesta ={
+                response ={
                     meta: {
                         status: 200,
                         total: confirm.length,
-                        url: 'api/movies/update/:id'
+                        url: '/api/movies/delete/:id'
                     },
-                    data:confirm
+                    data: movieDelete
                 }
             }else{
-                respuesta ={
+                response ={
                     meta: {
                         status: 204,
                         total: confirm.length,
-                        url: 'api/movies/update/:id'
+                        url: '/api/movies/delete/:id'
                     },
-                    data:confirm
+                    data: movieDelete
                 }
             }
-            res.json(respuesta);
-        })    
-        .catch(error => res.send(error))
-    },
-    destroy: (req,res) => {
-        let movieId = req.params.id;
-        Movies
-        .destroy({where: {id: movieId}, force: true}) // force: true es para asegurar que se ejecute la acción
-        .then(confirm => {
-            let respuesta;
-            if(confirm){
-                respuesta ={
-                    meta: {
-                        status: 200,
-                        total: confirm.length,
-                        url: 'api/movies/destroy/:id'
-                    },
-                    data:confirm
-                }
-            }else{
-                respuesta ={
-                    meta: {
-                        status: 204,
-                        total: confirm.length,
-                        url: 'api/movies/destroy/:id'
-                    },
-                    data:confirm
-                }
-            }
-            res.json(respuesta);
-        })    
-        .catch(error => res.send(error))
+            return res.status(202).json(response);
+        } catch (error) {
+            return res.status(error.status || 500).json(error);
+        }
     }
-    
 }
 
 module.exports = moviesAPIController;

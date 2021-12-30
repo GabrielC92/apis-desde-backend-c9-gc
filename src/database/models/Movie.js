@@ -25,24 +25,25 @@ module.exports = (sequelize, dataTypes) => {
             type: dataTypes.DATEONLY,
             allowNull: false
         },
-        length: dataTypes.BIGINT(10),
-        genre_id: dataTypes.BIGINT(10)
+        length: dataTypes.BIGINT(10).UNSIGNED,
+        genre_id: dataTypes.BIGINT(10).UNSIGNED
     };
     let config = {
         timestamps: true,
         createdAt: 'created_at',
         updatedAt: 'updated_at',
-        deletedAt: false
+        deletedAt: false,
+        underscored: true
     }
     const Movie = sequelize.define(alias,cols,config);
 
     Movie.associate = function (models) {
-        Movie.belongsTo(models.Genre, { // models.Genre -> Genres es el valor de alias en genres.js
+        Movie.belongsTo(models.Genre, { // models.Genre -> Genre es el valor de alias en genre.js
             as: "genre",
             foreignKey: "genre_id"
         })
 
-        Movie.belongsToMany(models.Actor, { // models.Actor -> Actors es el valor de alias en actor.js
+        Movie.belongsToMany(models.Actor, { // models.Actor -> Actor es el valor de alias en actor.js
             as: "actors",
             through: 'actor_movie',
             foreignKey: 'movie_id',

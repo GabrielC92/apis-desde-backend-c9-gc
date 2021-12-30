@@ -2,17 +2,18 @@ const express = require('express');
 const router = express.Router();
 const moviesController = require('../controllers/moviesController');
 
-router.get('/movies', moviesController.list);
-router.get('/movies/new', moviesController.new);
-router.get('/movies/recommended', moviesController.recomended);
-router.get('/movies/detail/:id', moviesController.detail);
+router.get('/', moviesController.list);
+router.get('/new', moviesController.new);
+router.get('/recommended', moviesController.recommended);
+router.get('/detail/:id', moviesController.detail);
+router.get('/search', moviesController.search);
 //Rutas exigidas para la creación del CRUD
-router.get('/movies/add', moviesController.add);
-router.post('/movies/create', moviesController.create);
-router.get('/movies/edit/:id', moviesController.edit);
-router.put('/movies/update/:id', moviesController.update);
-router.get('/movies/delete/:id', moviesController.delete);
-router.delete('/movies/delete/:id', moviesController.destroy);
+router.get('/add', moviesController.add);
+router.post('/create', moviesController.create);
+router.get('/edit/:id', moviesController.edit);
+router.put('/update/:id', moviesController.update);
+router.get('/delete/:id', moviesController.delete);
+router.delete('/destroy/:id', moviesController.destroy);
 
-router.post('/movies/buscar', moviesController.buscar);
+router.post('/buscar', moviesController.buscar);
 module.exports = router;

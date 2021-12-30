@@ -13,19 +13,19 @@
         <section class="formulario">
             <form class="style-form" action="/movies/update/<%= Movie.id %>?_method=PUT" method="POST">
                 <label for="title">Título </label>
-                <p><input type="text" name="title" id="title" value="<%= locals.old && old.title ? old.title : Movie.title %>"></p>
+                <p><input type="text" name="title" id="title" value="<%= Movie.title %>"></p>
                 <p><span class="warning"><%= locals.errors && errors.title ? errors.title.msg : null %></span></p>
                 <label for="rating">Calificación </label>
-                <p><input type="number" name="rating" id="rating" value="<%= locals.old && old.rating ? old.rating : Movie.rating %>"></p>
+                <p><input type="number" name="rating" id="rating" value="<%= Movie.rating %>"></p>
                 <p><span class="warning"><%= locals.errors && errors.rating ? errors.rating.msg : null %></span></p>
                 <label for="awards">Premios </label>
-                <p><input type="number" name="awards" id="awards" value="<%= locals.old && old.awards ? old.awards : Movie.awards %>"></p>
+                <p><input type="number" name="awards" id="awards" value="<%= Movie.awards %>"></p>
                 <p><span class="warning"><%= locals.errors && errors.awards ? errors.awards.msg : null %></span></p>
                 <label for="release_date">Fecha de creación </label>
                 <p><input type="date" name="release_date" id="release_date" value="<%= Movie.release_date %>"></p>
                 <p><span class="warning"><%= locals.errors && errors.release_date ? errors.release_date.msg : null %></span></p>
                 <label for="length">Duración </label>
-                <p><input type="number" name="length" id="" value="<%= locals.old && old.length ? old.length : Movie.length %>"></p>
+                <p><input type="number" name="length" id="" value="<%= Movie.length %>"></p>
                 <p><span class="warning"><%= locals.errors && errors.length ? errors.length.msg : null %></span></p>
                 <label for="genre_id">Género </label>
                 <p>
