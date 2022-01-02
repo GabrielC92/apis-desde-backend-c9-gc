@@ -153,7 +153,7 @@ const actorsAPIController = {
                         total: confirm.length,
                         url: '/api/actors/delete/:id'
                     },
-                    data:confirm
+                    data: actorDelete
                 }
             }else{
                 respuesta ={
@@ -162,7 +162,7 @@ const actorsAPIController = {
                         total: confirm.length,
                         url: '/api/actors/delete/:id'
                     },
-                    data:confirm
+                    data: actorDelete
                 }
             }
             res.json(respuesta);
